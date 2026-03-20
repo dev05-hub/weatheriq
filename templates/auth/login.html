@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — WeatherWise</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0a1628;
+      color: #e8f4fd;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 20% -10%, rgba(77,184,255,0.1) 0%, transparent 60%);
+      z-index: -1;
+    }
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(77,184,255,0.15);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .logo span { color: #4db8ff; }
+    .subtitle {
+      text-align: center;
+      color: #7ba7c8;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7ba7c8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 7px;
+    }
+    .form-control {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(77,184,255,0.15);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: #e8f4fd;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: #4db8ff; }
+    .form-control::placeholder { color: #4a6f8a; }
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: #4db8ff;
+      color: #0a1628;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #6bc7ff; }
+    .divider {
+      text-align: center;
+      color: #7ba7c8;
+      font-size: 13px;
+      margin: 20px 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 1px;
+      background: rgba(77,184,255,0.1);
+    }
+    .divider span { background: #0d1e3a; padding: 0 12px; position: relative; }
+    .link-row {
+      text-align: center;
+      font-size: 14px;
+      color: #7ba7c8;
+    }
+    .link-row a { color: #4db8ff; text-decoration: none; font-weight: 600; }
+    .link-row a:hover { text-decoration: underline; }
+    .msg {
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .msg.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+    .msg.success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Weather<span>Wise</span></div>
+  <p class="subtitle">Sign in to your account</p>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="msg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" action="{% url 'login' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" name="email" class="form-control"
+             placeholder="you@example.com" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control"
+             placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn">Sign In →</button>
+  </form>
+
+  <div class="divider"><span>or</span></div>
+  <div class="link-row">
+    Don't have an account? <a href="{% url 'register' %}">Create one free</a>
+  </div>
+</div>
+</body>
+</html>

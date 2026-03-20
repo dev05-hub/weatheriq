@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherWise Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0a1628; color: #e8f4fd; min-height: 100vh; }
+    .topbar { background: #0f2447; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(77,184,255,0.2); position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 22px; font-weight: 800; }
+    .logo span { color: #4db8ff; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .search-box { display: flex; gap: 8px; }
+    .search-box input { background: rgba(255,255,255,0.08); border: 1px solid rgba(77,184,255,0.2); border-radius: 8px; padding: 8px 14px; color: #e8f4fd; font-size: 14px; outline: none; width: 200px; transition: border-color 0.2s; }
+    .search-box input:focus { border-color: #4db8ff; }
+    .search-box button { background: #4db8ff; color: #0a1628; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; }
+    .search-box button:hover { background: #6bc7ff; }
+    .topbar-links a { color: #7ba7c8; text-decoration: none; font-size: 13px; margin-left: 16px; }
+    .topbar-links a:hover { color: #4db8ff; }
+    .container { padding: 24px 28px; max-width: 1100px; margin: 0 auto; }
+    .welcome { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .welcome h1 { font-size: 20px; font-weight: 700; }
+    .welcome span { font-size: 13px; color: #7ba7c8; }
+    .error-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 14px; color: #ef4444; margin-bottom: 16px; display: none; }
+    .hero { background: linear-gradient(135deg, rgba(77,184,255,0.1), rgba(26,58,107,0.4)); border: 1px solid rgba(77,184,255,0.2); border-radius: 20px; padding: 28px 32px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; min-height: 180px; }
+    .hero-left .city { font-size: 15px; color: #7ba7c8; margin-bottom: 6px; }
+    .hero-left .temp { font-size: 76px; font-weight: 800; line-height: 1; color: #4db8ff; letter-spacing: -2px; }
+    .hero-left .condition { font-size: 17px; text-transform: capitalize; margin: 8px 0 18px; }
+    .hero-stats { display: flex; gap: 24px; flex-wrap: wrap; }
+    .hero-stat label { display: block; font-size: 11px; color: #7ba7c8; text-transform: uppercase; letter-spacing: 1px; }
+    .hero-stat span { font-size: 17px; font-weight: 600; }
+    .hero-icon { font-size: 90px; }
+    .loading { text-align: center; color: #7ba7c8; padding: 50px; font-size: 15px; width: 100%; }
+    .metric-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+    .metric-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,255,0.15); border-radius: 16px; padding: 18px; }
+    .metric-card h3 { font-size: 11px; color: #7ba7c8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .metric-card .value { font-size: 28px; font-weight: 700; color: #4db8ff; }
+    .metric-card .sub { font-size: 12px; color: #7ba7c8; margin-top: 4px; }
+    .section-title { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #7ba7c8; margin-bottom: 14px; }
+    .forecast-section { margin-bottom: 20px; }
+    .forecast-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .forecast-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,255,0.15); border-radius: 16px; padding: 18px 14px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
+    .forecast-card:hover { border-color: rgba(77,184,255,0.4); transform: translateY(-3px); }
+    .forecast-card .day { font-size: 12px; font-weight: 700; color: #7ba7c8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .forecast-card .f-icon { font-size: 34px; margin-bottom: 8px; }
+    .forecast-card .f-condition { font-size: 11px; color: #7ba7c8; text-transform: capitalize; margin-bottom: 8px; min-height: 28px; }
+    .forecast-card .f-temps { display: flex; justify-content: center; gap: 8px; font-size: 15px; }
+    .forecast-card .f-max { font-weight: 700; }
+    .forecast-card .f-min { color: #7ba7c8; }
+    .forecast-card .f-rain { font-size: 11px; color: #4db8ff; margin-top: 6px; }
+    .chart-section { margin-bottom: 20px; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .chart-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,255,0.15); border-radius: 18px; padding: 20px; }
+    .chart-card-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7ba7c8; margin-bottom: 16px; }
+    .chart-wrap { position: relative; height: 200px; }
+    .chart-no-data { text-align: center; color: #7ba7c8; font-size: 13px; padding: 60px 20px; line-height: 1.6; }
+    .history-section { margin-bottom: 24px; }
+    .history-wrap { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,255,0.15); border-radius: 18px; overflow: hidden; }
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7ba7c8; padding: 12px 16px; border-bottom: 1px solid rgba(77,184,255,0.15); text-align: left; }
+    .history-table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .history-table tr:hover td { background: rgba(77,184,255,0.05); }
+    @media(max-width:900px){ .forecast-cards{grid-template-columns:repeat(3,1fr)} .metric-cards{grid-template-columns:repeat(2,1fr)} .chart-grid{grid-template-columns:1fr} }
+    @media(max-width:600px){ .forecast-cards{grid-template-columns:repeat(2,1fr)} .hero-icon{display:none} .container{padding:16px} }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Weather<span>Wise</span></div>
+  <div class="topbar-right">
+    <div class="search-box">
+      <input type="text" id="cityInput" placeholder="Search city..." value="Mumbai">
+      <button onclick="loadAll()">Search</button>
+    </div>
+    <div class="topbar-links">
+      <a href="/auth/profile/">👤 {{ request.user.first_name }}</a>
+      <a href="/admin/">Admin</a>
+      <a href="/auth/logout/">Logout</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="welcome">
+    <h1>Good day, {{ request.user.first_name }}! 👋</h1>
+    <span id="current-time"></span>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="hero" id="heroCard">
+    <div class="loading">⏳ Loading weather...</div>
+  </div>
+
+  <div class="metric-cards" id="metricCards" style="display:none">
+    <div class="metric-card">
+      <h3>💧 Humidity</h3>
+      <div class="value" id="m-humidity">--</div>
+      <div class="sub">Percentage</div>
+    </div>
+    <div class="metric-card">
+      <h3>💨 Wind Speed</h3>
+      <div class="value" id="m-wind">--</div>
+      <div class="sub">km/h</div>
+    </div>
+    <div class="metric-card">
+      <h3>🌡️ Feels Like</h3>
+      <div class="value" id="m-feels">--</div>
+      <div class="sub">Celsius</div>
+    </div>
+    <div class="metric-card">
+      <h3>🔵 Pressure</h3>
+      <div class="value" id="m-pressure">--</div>
+      <div class="sub">hPa</div>
+    </div>
+  </div>
+
+  <!-- 5 Day Forecast -->
+  <div class="forecast-section" id="forecastSection" style="display:none">
+    <div class="section-title">📅 5-Day Forecast</div>
+    <div class="forecast-cards" id="forecastCards"></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-section" id="chartSection" style="display:none">
+    <div class="section-title">📊 Weather History Charts</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">🌡️ Temperature History</div>
+        <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">💧 Humidity History</div>
+        <div class="chart-wrap"><canvas id="humidityChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card" id="noChartData" style="display:none;margin-bottom:20px">
+    <div class="chart-no-data">
+      📊 No history yet for this city.<br>
+      Search a few more times and charts will appear!
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="section-title">🕐 Recent Searches</div>
+    <div class="history-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>City</th>
+            <th>Temperature</th>
+            <th>Condition</th>
+            <th>Humidity</th>
+            <th>Wind</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let tempChart = null;
+  let humidityChart = null;
+
+  const CHART_OPTS = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0f2447',
+        borderColor: 'rgba(77,184,255,0.3)',
+        borderWidth: 1,
+        titleColor: '#7ba7c8',
+        bodyColor: '#e8f4fd',
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#7ba7c8', font: { size: 10 } }, grid: { color: 'rgba(77,184,255,0.06)' } },
+      y: { ticks: { color: '#7ba7c8', font: { size: 10 } }, grid: { color: 'rgba(77,184,255,0.06)' } }
+    }
+  };
+
+  function updateTime() {
+    const now = new Date();
+    document.getElementById('current-time').textContent =
+      now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' }) +
+      ' · ' + now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  }
+  updateTime();
+  setInterval(updateTime, 60000);
+
+  function getIcon(condition) {
+    const c = condition.toLowerCase();
+    if (c.includes('clear')) return '☀️';
+    if (c.includes('cloud')) return '⛅';
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧️';
+    if (c.includes('storm') || c.includes('thunder')) return '⛈️';
+    if (c.includes('snow')) return '❄️';
+    if (c.includes('mist') || c.includes('fog') || c.includes('haze')) return '🌫️';
+    return '🌤️';
+  }
+
+  function getDayName(dateStr) {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    return date.toLocaleDateString('en-IN', { weekday:'short', day:'numeric' });
+  }
+
+  async function loadCurrentWeather(city) {
+    const res = await fetch(`/api/weather/?city=${encodeURIComponent(city)}`);
+    const data = await res.json();
+
+    if (String(data.cod) !== '200') {
+      document.getElementById('errorBox').textContent = '❌ City not found. Try another name.';
+      document.getElementById('errorBox').style.display = 'block';
+      document.getElementById('heroCard').innerHTML = '<div class="loading">No data found</div>';
+      return false;
+    }
+
+    document.getElementById('heroCard').innerHTML = `
+      <div class="hero-left">
+        <div class="city">📍 ${data.name}, ${data.sys.country}</div>
+        <div class="temp">${Math.round(data.main.temp)}°<span style="font-size:36px">C</span></div>
+        <div class="condition">${data.weather[0].description}</div>
+        <div class="hero-stats">
+          <div class="hero-stat"><label>Humidity</label><span>${data.main.humidity}%</span></div>
+          <div class="hero-stat"><label>Wind</label><span>${Math.round(data.wind.speed * 3.6)} km/h</span></div>
+          <div class="hero-stat"><label>Pressure</label><span>${data.main.pressure} hPa</span></div>
+          <div class="hero-stat"><label>Visibility</label><span>${data.visibility ? (data.visibility/1000).toFixed(1) + ' km' : 'N/A'}</span></div>
+        </div>
+      </div>
+      <div class="hero-icon">${getIcon(data.weather[0].description)}</div>
+    `;
+
+    document.getElementById('m-humidity').textContent = data.main.humidity + '%';
+    document.getElementById('m-wind').textContent = Math.round(data.wind.speed * 3.6) + ' km/h';
+    document.getElementById('m-feels').textContent = Math.round(data.main.feels_like) + '°C';
+    document.getElementById('m-pressure').textContent = data.main.pressure + ' hPa';
+    document.getElementById('metricCards').style.display = 'grid';
+    return true;
+  }
+
+  async function loadForecast(city) {
+    const res = await fetch(`/api/forecast/?city=${encodeURIComponent(city)}`);
+    const data = await res.json();
+    if (!data.forecast || !data.forecast.length) return;
+
+    document.getElementById('forecastCards').innerHTML = data.forecast.map(day => `
+      <div class="forecast-card">
+        <div class="day">${getDayName(day.date)}</div>
+        <div class="f-icon">${getIcon(day.condition_desc || day.condition)}</div>
+        <div class="f-condition">${day.condition_desc || day.condition}</div>
+        <div class="f-temps">
+          <span class="f-max">${day.temp_max}°</span>
+          <span class="f-min">${day.temp_min}°</span>
+        </div>
+        <div class="f-rain">🌧 ${day.pop}% rain</div>
+      </div>
+    `).join('');
+    document.getElementById('forecastSection').style.display = 'block';
+  }
+
+  async function loadCharts(city) {
+    const res = await fetch(`/api/chart/?city=${encodeURIComponent(city)}`);
+    const data = await res.json();
+
+    if (!data.labels || data.labels.length < 2) {
+      document.getElementById('noChartData').style.display = 'block';
+      document.getElementById('chartSection').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('chartSection').style.display = 'block';
+    document.getElementById('noChartData').style.display = 'none';
+
+    if (tempChart) tempChart.destroy();
+    if (humidityChart) humidityChart.destroy();
+
+    tempChart = new Chart(document.getElementById('tempChart'), {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'Temperature °C',
+            data: data.temps,
+            borderColor: '#4db8ff',
+            backgroundColor: 'rgba(77,184,255,0.1)',
+            borderWidth: 2,
+            pointBackgroundColor: '#4db8ff',
+            pointRadius: 4,
+            fill: true,
+            tension: 0.4,
+          },
+          {
+            label: 'Feels Like °C',
+            data: data.feels_like,
+            borderColor: '#ff9d5c',
+            borderWidth: 2,
+            pointBackgroundColor: '#ff9d5c',
+            pointRadius: 3,
+            fill: false,
+            tension: 0.4,
+            borderDash: [5, 5],
+          }
+        ]
+      },
+      options: {
+        ...CHART_OPTS,
+        plugins: {
+          ...CHART_OPTS.plugins,
+          legend: { display: true, labels: { color: '#7ba7c8', font: { size: 11 } } }
+        }
+      }
+    });
+
+    humidityChart = new Chart(document.getElementById('humidityChart'), {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Humidity %',
+          data: data.humidity,
+          backgroundColor: 'rgba(77,184,255,0.3)',
+          borderColor: '#4db8ff',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: { ...CHART_OPTS, scales: { ...CHART_OPTS.scales, y: { ...CHART_OPTS.scales.y, min: 0, max: 100 } } }
+    });
+  }
+
+  async function loadHistory() {
+    try {
+      const res = await fetch('/api/history/');
+      const data = await res.json();
+      if (!data.history || !data.history.length) return;
+      document.getElementById('historyBody').innerHTML = data.history.map(r => `
+        <tr>
+          <td>📍 ${r.city}, ${r.country}</td>
+          <td style="color:#4db8ff;font-weight:600">${r.temperature}°C</td>
+          <td style="text-transform:capitalize">${r.condition}</td>
+          <td>${r.humidity}%</td>
+          <td>${r.wind_speed} km/h</td>
+          <td style="color:#7ba7c8">${r.recorded_at}</td>
+        </tr>
+      `).join('');
+      document.getElementById('historySection').style.display = 'block';
+    } catch(e) { console.log('History error:', e); }
+  }
+
+  async function loadAll() {
+    const city = document.getElementById('cityInput').value.trim();
+    if (!city) return;
+
+    document.getElementById('errorBox').style.display = 'none';
+    document.getElementById('heroCard').innerHTML = '<div class="loading">⏳ Loading...</div>';
+    document.getElementById('metricCards').style.display = 'none';
+    document.getElementById('forecastSection').style.display = 'none';
+    document.getElementById('chartSection').style.display = 'none';
+    document.getElementById('noChartData').style.display = 'none';
+
+    const success = await loadCurrentWeather(city);
+    if (success) {
+      await loadForecast(city);
+      await loadCharts(city);
+      await loadHistory();
+    }
+  }
+
+  document.getElementById('cityInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') loadAll();
+  });
+
+  const defaultCity = '{{ request.user.default_city }}' || 'Mumbai';
+  document.getElementById('cityInput').value = defaultCity;
+  loadAll();
+</script>
+</body>
+</html>

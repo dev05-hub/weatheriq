@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — WeatherWise</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0a1628; color: #e8f4fd; min-height: 100vh; }
+
+    /* Topbar */
+    .topbar { background: #0f2447; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(77,184,255,0.2); }
+    .logo { font-size: 20px; font-weight: 800; text-decoration: none; color: #e8f4fd; }
+    .logo span { color: #4db8ff; }
+    .topbar-links a { color: #7ba7c8; text-decoration: none; font-size: 13px; margin-left: 16px; }
+    .topbar-links a:hover { color: #4db8ff; }
+
+    /* Layout */
+    .container { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+    .page-title { font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+    .page-title span { color: #4db8ff; }
+
+    /* Avatar section */
+    .profile-header {
+      background: linear-gradient(135deg, rgba(77,184,255,0.1), rgba(26,58,107,0.3));
+      border: 1px solid rgba(77,184,255,0.2);
+      border-radius: 20px;
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4db8ff, #1a6fa8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 800;
+      color: #0a1628;
+      flex-shrink: 0;
+    }
+    .profile-info h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .profile-info p { font-size: 14px; color: #7ba7c8; }
+    .plan-badge {
+      display: inline-block;
+      background: rgba(77,184,255,0.15);
+      color: #4db8ff;
+      border: 1px solid rgba(77,184,255,0.25);
+      border-radius: 100px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* Grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(77,184,255,0.15);
+      border-radius: 18px;
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #7ba7c8;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form elements */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7ba7c8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 7px;
+    }
+    .form-control {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(77,184,255,0.15);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #e8f4fd;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: #4db8ff; }
+    .form-control::placeholder { color: #4a6f8a; }
+    .form-hint { font-size: 11px; color: #4a6f8a; margin-top: 5px; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #4db8ff; color: #0a1628; width: 100%; margin-top: 4px; }
+    .btn-primary:hover { background: #6bc7ff; }
+    .btn-danger { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); width: 100%; margin-top: 4px; }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+    /* Messages */
+    .messages { margin-bottom: 20px; }
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 8px; }
+    .msg.success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+    .msg.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(77,184,255,0.15);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 26px; font-weight: 800; color: #4db8ff; }
+    .stat-card .lbl { font-size: 12px; color: #7ba7c8; margin-top: 4px; }
+
+    /* Danger zone */
+    .danger-zone {
+      background: rgba(239,68,68,0.04);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 18px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+    .danger-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #ef4444;
+      margin-bottom: 10px;
+    }
+    .danger-desc { font-size: 13px; color: #7ba7c8; margin-bottom: 14px; line-height: 1.6; }
+
+    @media(max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .profile-header { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <a href="/" class="logo">Weather<span>Wise</span></a>
+  <div class="topbar-links">
+    <a href="/">🏠 Dashboard</a>
+    <a href="/auth/logout/">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="page-title">My <span>Profile</span></div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div class="msg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Profile header -->
+  <div class="profile-header">
+    <div class="avatar">
+      {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+    </div>
+    <div class="profile-info">
+      <h2>{{ request.user.first_name }} {{ request.user.last_name }}</h2>
+      <p>{{ request.user.email }}</p>
+      <p>Member since {{ request.user.date_joined|date:"F Y" }}</p>
+      <span class="plan-badge">{{ request.user.plan }} plan</span>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num">🌤</div>
+      <div class="lbl">Default City<br><strong style="color:#e8f4fd">{{ request.user.default_city|default:"Not set" }}</strong></div>
+    </div>
+    <div class="stat-card">
+      <div class="num">📅</div>
+      <div class="lbl">Account Age<br><strong style="color:#e8f4fd">{{ request.user.date_joined|timesince }} ago</strong></div>
+    </div>
+    <div class="stat-card">
+      <div class="num">✅</div>
+      <div class="lbl">Account Status<br><strong style="color:#22c55e">Active</strong></div>
+    </div>
+  </div>
+
+  <!-- Two column grid -->
+  <div class="grid">
+
+    <!-- Update Profile -->
+    <div class="card">
+      <div class="card-title">✏️ Edit Profile</div>
+      <form method="POST" action="{% url 'profile' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_profile">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" name="first_name" class="form-control"
+                 value="{{ request.user.first_name }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" name="last_name" class="form-control"
+                 value="{{ request.user.last_name }}"
+                 placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default City</label>
+          <input type="text" name="default_city" class="form-control"
+                 value="{{ request.user.default_city }}"
+                 placeholder="e.g. Mumbai, Delhi, Bangalore">
+          <p class="form-hint">This city loads automatically on your dashboard</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control"
+                 value="{{ request.user.email }}" disabled
+                 style="opacity:0.5;cursor:not-allowed">
+          <p class="form-hint">Email cannot be changed</p>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="card">
+      <div class="card-title">🔐 Change Password</div>
+      <form method="POST" action="{% url 'profile' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="change_password">
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <input type="password" name="old_password" class="form-control"
+                 placeholder="Your current password" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" name="new_password" class="form-control"
+                 placeholder="Min 6 characters" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <input type="password" name="new_password2" class="form-control"
+                 placeholder="Repeat new password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Change Password</button>
+      </form>
+
+      <!-- Account info card -->
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(77,184,255,0.1)">
+        <div class="card-title">ℹ️ Account Info</div>
+        <div style="font-size:13px;color:#7ba7c8;line-height:2">
+          <div>📧 <strong style="color:#e8f4fd">{{ request.user.email }}</strong></div>
+          <div>🕐 Last login: <strong style="color:#e8f4fd">{{ request.user.last_login|date:"d M Y, H:i"|default:"N/A" }}</strong></div>
+          <div>📆 Joined: <strong style="color:#e8f4fd">{{ request.user.date_joined|date:"d M Y" }}</strong></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div class="danger-title">⚠️ Danger Zone</div>
+    <div class="danger-desc">
+      Logging out will end your current session. You will need to log in again to access your dashboard.
+    </div>
+    <a href="/auth/logout/">
+      <button class="btn btn-danger">Logout from WeatherWise</button>
+    </a>
+  </div>
+
+</div>
+
+</body>
+</html>

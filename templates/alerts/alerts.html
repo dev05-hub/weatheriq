@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Alerts — WeatherWise</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0a1628; color: #e8f4fd; min-height: 100vh; }
+
+    /* Topbar */
+    .topbar { background: #0f2447; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(77,184,255,0.2); }
+    .logo { font-size: 20px; font-weight: 800; text-decoration: none; color: #e8f4fd; }
+    .logo span { color: #4db8ff; }
+    .topbar-links a { color: #7ba7c8; text-decoration: none; font-size: 13px; margin-left: 16px; }
+    .topbar-links a:hover { color: #4db8ff; }
+
+    /* Layout */
+    .container { max-width: 1000px; margin: 28px auto; padding: 0 24px; }
+    .page-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .page-title span { color: #4db8ff; }
+    .page-sub { font-size: 14px; color: #7ba7c8; margin-bottom: 24px; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(77,184,255,0.15); border-radius: 16px; padding: 18px; text-align: center; }
+    .stat-card .num { font-size: 32px; font-weight: 800; color: #4db8ff; }
+    .stat-card .lbl { font-size: 12px; color: #7ba7c8; margin-top: 4px; }
+
+    /* Grid */
+    .grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; margin-bottom: 24px; }
+
+    /* Create alert form */
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(77,184,255,0.15); border-radius: 18px; padding: 22px; }
+    .card-title { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7ba7c8; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; color: #7ba7c8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .form-control { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(77,184,255,0.15); border-radius: 10px; padding: 10px 13px; color: #e8f4fd; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .form-control:focus { border-color: #4db8ff; }
+    .form-control option { background: #0f2447; }
+    .form-hint { font-size: 11px; color: #4a6f8a; margin-top: 4px; }
+
+    /* Threshold units helper */
+    .threshold-hints { background: rgba(77,184,255,0.06); border: 1px solid rgba(77,184,255,0.12); border-radius: 10px; padding: 10px 13px; margin-bottom: 14px; font-size: 12px; color: #7ba7c8; line-height: 1.8; display: none; }
+    .threshold-hints.show { display: block; }
+
+    /* Buttons */
+    .btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: #4db8ff; color: #0a1628; width: 100%; }
+    .btn-primary:hover { background: #6bc7ff; }
+    .btn-check { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); width: 100%; margin-top: 8px; }
+    .btn-check:hover { background: rgba(34,197,94,0.2); }
+
+    /* Alerts list */
+    .alerts-list { display: flex; flex-direction: column; gap: 10px; }
+    .alert-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(77,184,255,0.15); border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+    .alert-item.inactive { opacity: 0.5; }
+    .alert-icon { font-size: 24px; flex-shrink: 0; }
+    .alert-info { flex: 1; }
+    .alert-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .alert-sub { font-size: 12px; color: #7ba7c8; }
+    .alert-meta { font-size: 11px; color: #4a6f8a; margin-top: 2px; }
+    .alert-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-sm { padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-toggle-on { background: rgba(234,179,8,0.12); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+    .btn-toggle-on:hover { background: rgba(234,179,8,0.2); }
+    .btn-toggle-off { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .btn-toggle-off:hover { background: rgba(34,197,94,0.2); }
+    .btn-delete { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .btn-delete:hover { background: rgba(239,68,68,0.2); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-active { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .dot-inactive { background: #7ba7c8; }
+    .empty-state { text-align: center; padding: 40px; color: #7ba7c8; font-size: 14px; line-height: 1.8; }
+
+    /* Messages */
+    .messages { margin-bottom: 20px; }
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 8px; }
+    .msg.success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+    .msg.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+    .msg.info { background: rgba(77,184,255,0.1); border: 1px solid rgba(77,184,255,0.25); color: #4db8ff; }
+
+    /* Alert logs */
+    .logs-section { margin-bottom: 24px; }
+    .log-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .log-item:last-child { border-bottom: none; }
+    .log-city { font-weight: 600; flex: 1; }
+    .log-type { color: #7ba7c8; font-size: 12px; }
+    .log-value { color: #ff9d5c; font-weight: 600; }
+    .log-time { color: #4a6f8a; font-size: 11px; }
+    .log-email { font-size: 10px; padding: 2px 7px; border-radius: 100px; font-weight: 600; }
+    .email-sent { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .email-fail { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+    @media(max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .alert-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <a href="/" class="logo">Weather<span>Wise</span></a>
+  <div class="topbar-links">
+    <a href="/">🏠 Dashboard</a>
+    <a href="/auth/profile/">👤 Profile</a>
+    <a href="/auth/logout/">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="page-title">Smart <span>Alerts</span> 🔔</div>
+  <p class="page-sub">Get email notifications when weather crosses your set thresholds</p>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div class="msg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num">{{ total_alerts }}</div>
+      <div class="lbl">Total Alerts</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#22c55e">{{ active_alerts }}</div>
+      <div class="lbl">Active Alerts</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#ff9d5c">{{ total_alerts|add:"-"|add:active_alerts }}</div>
+      <div class="lbl">Paused Alerts</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+
+    <!-- Create Alert Form -->
+    <div class="card">
+      <div class="card-title">➕ Create Alert</div>
+      <form method="POST" action="{% url 'alerts' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+
+        <div class="form-group">
+          <label class="form-label">City Name</label>
+          <input type="text" name="city_name" class="form-control"
+                 placeholder="e.g. Mumbai, Delhi" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Alert Type</label>
+          <select name="alert_type" class="form-control" id="alertTypeSelect" onchange="showHints(this.value)" required>
+            <option value="">-- Select type --</option>
+            {% for value, label in alert_types %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="threshold-hints" id="thresholdHints"></div>
+
+        <div class="form-group">
+          <label class="form-label">Threshold Value</label>
+          <input type="number" name="threshold" class="form-control"
+                 id="thresholdInput" placeholder="Enter value" step="0.1" required>
+          <p class="form-hint" id="thresholdUnit">Select alert type first</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Alert</button>
+      </form>
+
+      <!-- Check now button -->
+      <form method="POST" action="{% url 'alerts' %}" style="margin-top:8px">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="check_now">
+        <button type="submit" class="btn btn-check">
+          🔍 Check All Alerts Now
+        </button>
+      </form>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="card">
+      <div class="card-title">📋 Your Alerts</div>
+
+      {% if alerts %}
+      <div class="alerts-list">
+        {% for alert in alerts %}
+        <div class="alert-item {% if not alert.is_active %}inactive{% endif %}">
+          <div class="status-dot {% if alert.is_active %}dot-active{% else %}dot-inactive{% endif %}"></div>
+          <div class="alert-icon">
+            {% if alert.alert_type == 'temperature_high' %}🌡️
+            {% elif alert.alert_type == 'temperature_low' %}❄️
+            {% elif alert.alert_type == 'humidity' %}💧
+            {% elif alert.alert_type == 'wind' %}💨
+            {% elif alert.alert_type == 'rain' %}🌧️
+            {% endif %}
+          </div>
+          <div class="alert-info">
+            <div class="alert-title">{{ alert.city_name }}</div>
+            <div class="alert-sub">{{ alert.get_alert_type_display }} &gt; {{ alert.threshold }}</div>
+            <div class="alert-meta">
+              Triggered {{ alert.trigger_count }} times
+              {% if alert.last_triggered %}
+              · Last: {{ alert.last_triggered|date:"d M Y H:i" }}
+              {% endif %}
+            </div>
+          </div>
+          <div class="alert-actions">
+            <!-- Toggle active/pause -->
+            <form method="POST" action="{% url 'alerts' %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle">
+              <input type="hidden" name="alert_id" value="{{ alert.id }}">
+              <button type="submit" class="btn-sm {% if alert.is_active %}btn-toggle-on{% else %}btn-toggle-off{% endif %}">
+                {% if alert.is_active %}Pause{% else %}Activate{% endif %}
+              </button>
+            </form>
+            <!-- Delete -->
+            <form method="POST" action="{% url 'alerts' %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="alert_id" value="{{ alert.id }}">
+              <button type="submit" class="btn-sm btn-delete"
+                onclick="return confirm('Delete this alert?')">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="empty-state">
+        🔔 No alerts yet!<br>
+        Create your first alert to get<br>
+        notified when weather changes.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Alert Logs -->
+  {% if recent_logs %}
+  <div class="logs-section">
+    <div class="card">
+      <div class="card-title">📜 Recent Alert History</div>
+      {% for log in recent_logs %}
+      <div class="log-item">
+        <span class="log-city">📍 {{ log.alert.city_name }}</span>
+        <span class="log-type">{{ log.alert.get_alert_type_display }}</span>
+        <span class="log-value">{{ log.triggered_value }}</span>
+        <span class="log-time">{{ log.sent_at|date:"d M Y, H:i" }}</span>
+        <span class="log-email {% if log.email_sent %}email-sent{% else %}email-fail{% endif %}">
+          {% if log.email_sent %}✉️ Sent{% else %}❌ Failed{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+const hints = {
+  'temperature_high': { unit: '°C — Alert when temp goes ABOVE this', placeholder: 'e.g. 40', hint: 'Normal summer: 35-40°C' },
+  'temperature_low':  { unit: '°C — Alert when temp goes BELOW this', placeholder: 'e.g. 5',  hint: 'Cold alert: 5-10°C' },
+  'humidity':         { unit: '% — Alert when humidity goes ABOVE this', placeholder: 'e.g. 85', hint: 'Uncomfortable above 80%' },
+  'wind':             { unit: 'km/h — Alert when wind goes ABOVE this', placeholder: 'e.g. 50', hint: 'Strong wind above 50 km/h' },
+  'rain':             { unit: 'mm/hr — Alert when rain goes ABOVE this', placeholder: 'e.g. 10', hint: 'Heavy rain above 10 mm/hr' },
+};
+
+function showHints(type) {
+  const hintsBox = document.getElementById('thresholdHints');
+  const unitLabel = document.getElementById('thresholdUnit');
+  const input = document.getElementById('thresholdInput');
+
+  if (hints[type]) {
+    const h = hints[type];
+    hintsBox.innerHTML = `<strong style="color:#4db8ff">Unit:</strong> ${h.unit}<br><strong style="color:#4db8ff">Tip:</strong> ${h.hint}`;
+    hintsBox.classList.add('show');
+    unitLabel.textContent = h.unit;
+    input.placeholder = h.placeholder;
+  } else {
+    hintsBox.classList.remove('show');
+    unitLabel.textContent = 'Select alert type first';
+    input.placeholder = 'Enter value';
+  }
+}
+</script>
+
+</body>
+</html>
