@@ -87,4 +87,4 @@ Copy `.env.example` to `.env` and fill in:
 ## Developer
 - **Name:** Your Name
 - **College:** Your College Name
-- **GitHub:** https://github.com/dev05-hub
+- **GitHub:** https://github.com/dev05-hub"# WeatherWise" 
